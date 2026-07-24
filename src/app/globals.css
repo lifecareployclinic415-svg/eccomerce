@@ -1,0 +1,129 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+/* =====================================================================
+   Design tokens.
+   Every colour is semantic, never literal — components reference
+   `bg-surface` or `text-price`, never `bg-zinc-900`. That is what makes
+   dark mode and rebranding a token change instead of a refactor.
+   ===================================================================== */
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Neutrals — cool graphite, deliberately not warm cream */
+  --paper:        oklch(0.99 0.002 240);
+  --surface:      oklch(1 0 0);
+  --surface-sunk: oklch(0.975 0.003 240);
+  --line:         oklch(0.91 0.004 240);
+  --ink:          oklch(0.21 0.012 250);
+  --ink-soft:     oklch(0.52 0.011 250);
+
+  /* Brand — jade. Actions, links, focus. */
+  --brand:        oklch(0.48 0.088 175);
+  --brand-hover:  oklch(0.42 0.09 175);
+  --brand-tint:   oklch(0.96 0.02 175);
+  --on-brand:     oklch(0.99 0 0);
+
+  /* Commerce — brass. Money only: prices, savings, markdowns. */
+  --price:        oklch(0.58 0.104 78);
+  --price-tint:   oklch(0.96 0.03 78);
+
+  --danger:       oklch(0.55 0.19 25);
+  --success:      oklch(0.55 0.13 155);
+
+  --radius: 0.75rem;
+
+  /* Motion. One easing curve for the whole site; consistency reads as craft. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 160ms;
+  --dur: 280ms;
+}
+
+.dark {
+  --paper:        oklch(0.16 0.008 250);
+  --surface:      oklch(0.19 0.009 250);
+  --surface-sunk: oklch(0.14 0.008 250);
+  --line:         oklch(0.29 0.01 250);
+  --ink:          oklch(0.96 0.003 250);
+  --ink-soft:     oklch(0.68 0.008 250);
+
+  --brand:        oklch(0.66 0.09 175);
+  --brand-hover:  oklch(0.72 0.09 175);
+  --brand-tint:   oklch(0.26 0.03 175);
+  --on-brand:     oklch(0.16 0.01 250);
+
+  --price:        oklch(0.75 0.09 78);
+  --price-tint:   oklch(0.26 0.03 78);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-tint: var(--brand-tint);
+  --color-on-brand: var(--on-brand);
+  --color-price: var(--price);
+  --color-price-tint: var(--price-tint);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+}
+
+@layer base {
+  * { border-color: var(--line); }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Display face is used sparingly and always optically tightened. */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  /* Prices, SKUs, order numbers: data, so tabular and alignable. */
+  .numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* Visible keyboard focus everywhere — non-negotiable quality floor. */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection { background: var(--brand-tint); color: var(--ink); }
+}
+
+/* Respect the OS setting. Motion is an enhancement, never the mechanism. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

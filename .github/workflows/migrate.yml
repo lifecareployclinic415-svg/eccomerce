@@ -1,0 +1,46 @@
+name: Deploy migrations
+
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/migrations/**"]
+
+# Never let two migration runs overlap.
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    # Configure a required reviewer on this environment in GitHub if you
+    # want a human to approve every schema change to production.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+
+      - name: Link project
+        run: supabase link --project-ref $SUPABASE_PROJECT_REF
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      # Print the plan before applying. The log becomes the record of
+      # what changed, which is what you will want at 2am.
+      - name: Show pending changes
+        run: supabase db diff --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Apply
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Verify RLS is intact
+        run: |
+          supabase db push --dry-run > /dev/null
+          echo "Run the security_rls_status view and confirm zero rows."

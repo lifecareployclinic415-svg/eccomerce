@@ -1,0 +1,50 @@
+name: Database backup
+
+on:
+  schedule:
+    - cron: "0 20 * * *"   # 01:30 IST daily
+  workflow_dispatch:        # so you can trigger a pre-deploy snapshot
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: supabase/setup-cli@v1
+
+      - name: Dump database
+        run: |
+          STAMP=$(date -u +%Y%m%d-%H%M)
+          # ⚠️ Use the SESSION POOLER connection string, not the direct
+          # one. GitHub runners are IPv4-only and Supabase's direct host
+          # resolves to IPv6 — the direct URL fails with a confusing
+          # "network unreachable" that looks like a credentials problem.
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "db-$STAMP.sql"
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only -f "data-$STAMP.sql"
+          gzip db-$STAMP.sql data-$STAMP.sql
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_SESSION_POOLER_URL }}
+
+      # Store OUTSIDE the provider being backed up. Any S3-compatible
+      # bucket works; Cloudflare R2 has no egress fee, which matters when
+      # you are restoring under pressure.
+      - name: Upload
+        run: |
+          aws s3 cp . "s3://$BUCKET/supabase/" --recursive \
+            --exclude "*" --include "*.sql.gz" \
+            --endpoint-url "$ENDPOINT"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_SECRET_KEY }}
+          BUCKET: ${{ secrets.BACKUP_BUCKET }}
+          ENDPOINT: ${{ secrets.BACKUP_ENDPOINT }}
+
+      # A backup job that fails silently is worse than no backup at all,
+      # because you believe you are covered.
+      - name: Alert on failure
+        if: failure()
+        run: |
+          curl -X POST "$SLACK_WEBHOOK" \
+            -H 'Content-Type: application/json' \
+            -d '{"text":"⚠️ Supabase backup FAILED — check immediately"}'
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
