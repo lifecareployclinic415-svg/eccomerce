@@ -165,6 +165,13 @@ export const getTestimonials = unstable_cache(
 
 /* ------------------------------------------------------------ cms pages */
 
+type CmsPage = {
+  slug: string;
+  title: string;
+  content: string | null;
+  updated_at: string;
+};
+
 export const getCmsPage = unstable_cache(
   async (slug: string) => {
     const db = createAdminClient();
@@ -175,7 +182,7 @@ export const getCmsPage = unstable_cache(
       .eq("is_published", true)
       .maybeSingle();
 
-    return data;
+    return data as CmsPage | null;
   },
   ["cms-page"],
   { tags: [CMS_TAGS.pages], revalidate: 3600 },
