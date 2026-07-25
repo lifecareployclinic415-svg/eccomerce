@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* @import "tw-animate-css"; */
-
 /* =====================================================================
    Design tokens.
    Every colour is semantic, never literal — components reference
