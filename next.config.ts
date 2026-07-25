@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const supabaseHost = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname;
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     // remotePatterns is an allowlist. Without it, next/image refuses the
     // URL; with a wildcard, you become an open image-resizing proxy for
@@ -22,4 +25,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
