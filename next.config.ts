@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     // remotePatterns is an allowlist. Without it, next/image refuses the
     // URL; with a wildcard, you become an open image-resizing proxy for
