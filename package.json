@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@sentry/nextjs": "^10.68.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
     "@tanstack/react-table": "^8.20.6",
