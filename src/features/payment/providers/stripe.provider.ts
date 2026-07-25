@@ -4,14 +4,19 @@ import "server-only";
 import Stripe from "stripe";
 import type { PaymentProvider, PaymentSession, WebhookResult } from "./payment.provider";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
+
+function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) throw new Error("STRIPE_SECRET_KEY is not configured");
+  return new Stripe(secretKey);
+}
 
 export const stripeProvider: PaymentProvider = {
   id: "stripe",
 
   async createSession({ orderId, amountMinor, currency, contactEmail }): Promise<PaymentSession> {
-    const intent = await stripe.paymentIntents.create(
+    const intent = await getStripe().paymentIntents.create(
       {
         amount: amountMinor,
         currency: currency.toLowerCase(),
@@ -34,7 +39,7 @@ export const stripeProvider: PaymentProvider = {
   async verifyWebhook(rawBody: string, signature: string) {
     // constructEvent throws on a bad signature or a stale timestamp,
     // which also protects against replay of captured requests.
-    return stripe.webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET);
+    return getStripe().webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET);
   },
 
   parseEvent(event: any): WebhookResult {
@@ -71,7 +76,7 @@ export const stripeProvider: PaymentProvider = {
   },
 
   async refund({ providerPaymentId, amountMinor, reason }) {
-    const refund = await stripe.refunds.create({
+    const refund = await getStripe().refunds.create({
       payment_intent: providerPaymentId,
       amount: amountMinor,
       metadata: { reason: reason ?? "" },

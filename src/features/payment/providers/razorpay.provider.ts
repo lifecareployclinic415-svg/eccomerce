@@ -4,13 +4,28 @@ import "server-only";
 import crypto from "crypto";
 import type { PaymentProvider, PaymentSession, WebhookResult } from "./payment.provider";
 
-const RZP_KEY = process.env.RAZORPAY_KEY_ID!;
-const RZP_SECRET = process.env.RAZORPAY_KEY_SECRET!;
-const RZP_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET!;
 const RZP_API = "https://api.razorpay.com/v1";
 
+function getRazorpayKey() {
+  const key = process.env.RAZORPAY_KEY_ID;
+  if (!key) throw new Error("RAZORPAY_KEY_ID environment variable is not set");
+  return key;
+}
+
+function getRazorpaySecret() {
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) throw new Error("RAZORPAY_KEY_SECRET environment variable is not set");
+  return secret;
+}
+
+function getRazorpayWebhookSecret() {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!secret) throw new Error("RAZORPAY_WEBHOOK_SECRET environment variable is not set");
+  return secret;
+}
+
 function auth() {
-  return "Basic " + Buffer.from(`${RZP_KEY}:${RZP_SECRET}`).toString("base64");
+  return "Basic " + Buffer.from(`${getRazorpayKey()}:${getRazorpaySecret()}`).toString("base64");
 }
 
 export const razorpayProvider: PaymentProvider = {
@@ -35,7 +50,7 @@ export const razorpayProvider: PaymentProvider = {
 
     return {
       providerOrderId: data.id,
-      clientToken: RZP_KEY, // publishable key id, safe for the browser
+      clientToken: getRazorpayKey(), // publishable key id, safe for the browser
       amountMinor,
       currency,
     };
@@ -43,7 +58,7 @@ export const razorpayProvider: PaymentProvider = {
 
   async verifyWebhook(rawBody: string, signature: string) {
     const expected = crypto
-      .createHmac("sha256", RZP_WEBHOOK_SECRET)
+      .createHmac("sha256", getRazorpayWebhookSecret())
       .update(rawBody)
       .digest("hex");
 
@@ -124,7 +139,7 @@ export function verifyRazorpayCheckoutSignature(params: {
   signature: string;
 }): boolean {
   const expected = crypto
-    .createHmac("sha256", RZP_SECRET)
+    .createHmac("sha256", getRazorpaySecret())
     .update(`${params.razorpayOrderId}|${params.razorpayPaymentId}`)
     .digest("hex");
 
